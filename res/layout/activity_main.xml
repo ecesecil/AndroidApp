@@ -10,23 +10,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         />
-     <Button
-        android:id="@+id/startButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginBottom="18dp"
-        android:layout_marginLeft="23dp"
-        android:text="Başla" />
 
-    <Button
-        android:id="@+id/stopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/startButton"
-        android:layout_marginLeft="33dp"
-        android:layout_toRightOf="@+id/startButton"
-        android:text="Bitir" />
 
 </RelativeLayout>
