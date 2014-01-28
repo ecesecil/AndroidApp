@@ -5,9 +5,11 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MainActivity extends FragmentActivity {
@@ -33,13 +35,16 @@ public class MainActivity extends FragmentActivity {
 					// latitude and longitude
 					double latitude = 40.932481;
 					double longitude =29.163663 ;
-					 
+					LatLng location=new LatLng(latitude, longitude);
+					
+					
 					// create marker
-					MarkerOptions marker = new MarkerOptions().position(new LatLng(latitude, longitude)).title("Hello Maps ");
+					MarkerOptions marker = new MarkerOptions().position(location).title("Hello Maps ");
 					 
 					// adding marker
 					googleMap.addMarker(marker);
-
+					
+					googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location,15));
 					
 					// check if map is created successfully or not
 			if (googleMap == null) {
