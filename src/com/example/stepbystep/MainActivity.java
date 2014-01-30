@@ -22,7 +22,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	GoogleMap googleMap;
 	LocationManager locationManager;
 	LocationListener locationListener;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -36,7 +36,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	}
 
 	private void initilizeMap() {
-
+		
 		FragmentManager myFragmentManager = getSupportFragmentManager();
 		SupportMapFragment mySupportMapFragment = (SupportMapFragment) myFragmentManager
 				.findFragmentById(R.id.map);
@@ -44,34 +44,51 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		Criteria criteria = new Criteria();
-		String provider = locationManager.getBestProvider(criteria, true);
+		final String provider = locationManager.getBestProvider(criteria, true);
 		final Location location = locationManager.getLastKnownLocation(provider);
-
 		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1,
 				10, this);
 		final Button startButton =(Button)findViewById(R.id.startButton);
+		final Button stopButton=(Button)findViewById(R.id.stopButton);
+		
 		startButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View arg0) {
-				double latitude=location.getLatitude();
-				double longitude=location.getLongitude();
+				Location currentLocation=locationManager.getLastKnownLocation(provider);
+				double currentLatitude=currentLocation.getLatitude();
+				double currentLongitude=currentLocation.getLongitude();
 				
 				googleMap.addMarker(new MarkerOptions()
-		        .position(new LatLng(latitude,longitude))
+		        .position(new LatLng(currentLatitude,currentLongitude))
 		        .title("Hello world"));
-				startButton.setVisibility(View.GONE);
+				startButton.setVisibility(View.INVISIBLE);
+				stopButton.setVisibility(View.VISIBLE);
+			}
+		});
+	
+		
+		stopButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+				double latitude=location.getLatitude()+0.00001;
+				double longitude=location.getLongitude()+0.00001;
+				googleMap.addMarker(new MarkerOptions()
+		        .position(new LatLng(latitude,longitude))
+		        .title("Hop burdayým"));
+				//stopButton.setVisibility(View.GONE);
 				//stopButton.setVisibility(View.VISIBLE);
+				
 			}
 		});
 	}
-
 	@Override
 	public void onLocationChanged(Location arg0) {
 		googleMap.setMyLocationEnabled(true);
 		googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(
 				arg0.getLatitude(), arg0.getLongitude()), 15));
-
+		 arg0.getLatitude();
 	}
 
 	@Override
