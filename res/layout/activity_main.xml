@@ -19,16 +19,15 @@
          android:layout_centerHorizontal="true"
          android:layout_marginBottom="25dp"
          android:text="Başla" />
+
       <Button
-         android:id="@+id/stopButton"
-         android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         android:layout_alignParentBottom="true"
-         android:layout_alignParentLeft="true"
-         android:layout_marginBottom="33dp"
-         android:layout_marginLeft="60dp"
-         android:visibility="invisible"
-         android:text="Bitir" />
-     
+          android:id="@+id/stopButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_alignBaseline="@+id/startButton"
+          android:layout_alignBottom="@+id/startButton"
+          android:layout_centerHorizontal="true"
+          android:text="Bitir"
+          android:visibility="invisible" />
      
 </RelativeLayout>
