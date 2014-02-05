@@ -102,21 +102,18 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 						.getLastKnownLocation(provider);
 				double lastLatitude = currentLocation.getLatitude();
 				double lastLongitude = currentLocation.getLongitude();
-				
-				LatLng endLatLng = new LatLng(lastLatitude, lastLongitude);
-				list.add(endLatLng);
-				googleMap.addMarker(new MarkerOptions().position(
-						new LatLng(lastLatitude, lastLongitude)).title("B"));
+				LatLng endLatLng= list.get(list.size()-1);
+				//LatLng endLatLng = new LatLng(lastLatitude, lastLongitude);
+				//list.add(endLatLng);
+				googleMap.addMarker(new MarkerOptions().position(endLatLng).title("B"));
 				stopButton.setVisibility(View.INVISIBLE);
 
 			
 				Polyline line = googleMap.addPolyline(new PolylineOptions().width(5)
 						.color(Color.BLUE).geodesic(true));
 
-				for (int z = 0; z < list.size() - 1; z++) {
-
-					line.setPoints(list.subList(0, z));
-
+				for (int z = 1; z < list.size(); z++) {
+					line.setPoints(list.subList(0, z+1));
 				}
 
 			}
