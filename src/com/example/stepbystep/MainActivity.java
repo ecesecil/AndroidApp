@@ -2,7 +2,6 @@ package com.example.stepbystep;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -16,6 +15,7 @@ import android.support.v4.app.FragmentManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -65,7 +65,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		// Path
 		final List<LatLng> list = new ArrayList<LatLng>();
 		final List<LatLng> deneme = new ArrayList<LatLng>();
-		// deneme.
+		
 
 		startButton.setOnClickListener(new OnClickListener() {
 
@@ -115,6 +115,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				for (int z = 1; z < list.size(); z++) {
 					line.setPoints(list.subList(0, z+1));
 				}
+				
+				double length = com.google.maps.android.SphericalUtil.computeLength(list);
+				Toast.makeText(getApplicationContext(), "Distance "+length, Toast.LENGTH_LONG).show();
 
 			}
 		});
