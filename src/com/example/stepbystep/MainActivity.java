@@ -1,6 +1,7 @@
 package com.example.stepbystep;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import android.content.Context;
@@ -12,9 +13,11 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.text.format.Time;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -29,6 +32,12 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	GoogleMap googleMap;
 	LocationManager locationManager;
 	LocationListener locationListener;
+	boolean running = false;
+
+	Polyline line;
+
+	// time
+	Date startTime = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,16 +54,20 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	private void initilizeMap() {
 
 		// GoogleMap
-
 		FragmentManager myFragmentManager = getSupportFragmentManager();
 		SupportMapFragment mySupportMapFragment = (SupportMapFragment) myFragmentManager
 				.findFragmentById(R.id.map);
+
 		googleMap = mySupportMapFragment.getMap();
+		googleMap.setMyLocationEnabled(true);
+
+		line = googleMap.addPolyline(new PolylineOptions().width(5)
+				.color(Color.BLUE).geodesic(true));
+
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		Criteria criteria = new Criteria();
 		final String provider = locationManager.getBestProvider(criteria, true);
-		final Location location = locationManager
-				.getLastKnownLocation(provider);
+
 		locationManager.requestLocationUpdates(
 				LocationManager.NETWORK_PROVIDER, 1, 10, this);
 
@@ -62,34 +75,43 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		final Button startButton = (Button) findViewById(R.id.startButton);
 		final Button stopButton = (Button) findViewById(R.id.stopButton);
 
-		// Path
-		final List<LatLng> list = new ArrayList<LatLng>();
-		final List<LatLng> deneme = new ArrayList<LatLng>();
-		
+		// TextView bir deðiþkene atandý.
+		final TextView infoBox = (TextView) findViewById(R.id.infoBox);
 
 		startButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View arg0) {
 
+				running = true;
+				infoBox.setText("Konum Bilgileri Alýnýyor..");
+
+				// starttime 'ý toplam süre hesabýný bulurken kullanýcaz.
+				startTime = new Date();
+
+				// son bilinen lokasyon deðeri marker ekleme ve polyline çizmek
+				// için kullacaðýz.
 				Location currentLocation = locationManager
 						.getLastKnownLocation(provider);
 				double firstLatitude = currentLocation.getLatitude();
 				double firstLongitude = currentLocation.getLongitude();
 
+				// Baþlangýç noktasý
 				LatLng startLatLng = new LatLng(firstLatitude, firstLongitude);
-				list.add(startLatLng);
-				list.add(new LatLng(40.91179370632012, 29.1926908493042));
-				list.add(new LatLng(40.9153286918986, 29.181768894195557));
-				list.add(new LatLng(40.91185857014307, 29.181050062179565));
-				list.add(new LatLng(40.909641002096116, 29.18193519115448));
-				// list.set(0, startLatLng);
 
+				// baþlangýç noktasýný haritada gösterip marker ekliyoruz.
 				googleMap.addMarker(new MarkerOptions().position(
 						new LatLng(firstLatitude, firstLongitude)).title("A"));
 
+				// baþla butonuna týklanýnca bitir butonun görünür olmasýný
+				// saðlýyoruz.
 				startButton.setVisibility(View.INVISIBLE);
 				stopButton.setVisibility(View.VISIBLE);
+
+				// enlem boylam bilgisini polyline'a ekliyoruz.
+				List<LatLng> points = line.getPoints();
+				points.add(startLatLng);
+				line.setPoints(points);
 
 			}
 		});
@@ -98,26 +120,26 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 			@Override
 			public void onClick(View arg0) {
+				running = false;
+				// son bilinen lokasyon deðeri marker ekleme ve polyline çizmek
+				// için kullacaðýz.
 				Location currentLocation = locationManager
 						.getLastKnownLocation(provider);
 				double lastLatitude = currentLocation.getLatitude();
 				double lastLongitude = currentLocation.getLongitude();
-				LatLng endLatLng= list.get(list.size()-1);
-				//LatLng endLatLng = new LatLng(lastLatitude, lastLongitude);
-				//list.add(endLatLng);
-				googleMap.addMarker(new MarkerOptions().position(endLatLng).title("B"));
+				LatLng endLatLng = new LatLng(lastLatitude, lastLongitude);
+
+				// bitir butonuna marker ekliyoruz.
+				googleMap.addMarker(new MarkerOptions().position(endLatLng)
+						.title("B"));
+
+				// bitir butonunu ekrandan kaldýrýyoruz.
 				stopButton.setVisibility(View.INVISIBLE);
 
-			
-				Polyline line = googleMap.addPolyline(new PolylineOptions().width(5)
-						.color(Color.BLUE).geodesic(true));
-
-				for (int z = 1; z < list.size(); z++) {
-					line.setPoints(list.subList(0, z+1));
-				}
-				
-				double length = com.google.maps.android.SphericalUtil.computeLength(list);
-				Toast.makeText(getApplicationContext(), "Distance "+length, Toast.LENGTH_LONG).show();
+				// enlem boylam deðerlerini polyline'a ekliyoruz.
+				List<LatLng> points = line.getPoints();
+				points.add(endLatLng);
+				line.setPoints(points);
 
 			}
 		});
@@ -125,10 +147,21 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 	@Override
 	public void onLocationChanged(Location arg0) {
-		googleMap.setMyLocationEnabled(true);
-		googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(
-				arg0.getLatitude(), arg0.getLongitude()), 15));
-		arg0.getLatitude();
+
+		LatLng currentLatLng = new LatLng(arg0.getLatitude(), arg0.getLongitude());
+		
+		googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+
+		if (running) {
+
+			List<LatLng> points = line.getPoints();
+			points.add(currentLatLng);
+			line.setPoints(points);
+			
+			final TextView infoBox = (TextView) findViewById(R.id.infoBox);
+			infoBox.setText("Anlýk Hýz :" + arg0.getSpeed() + "Toplam Mesafe:"+getDistance(line));
+		}
+
 	}
 
 	@Override
@@ -148,5 +181,16 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		// TODO Auto-generated method stub
 		System.out.println("STATUS CHANGED");
 
+	}
+
+	public String getDistance(Polyline polyline) {
+		double length = com.google.maps.android.SphericalUtil
+				.computeLength(polyline.getPoints());
+
+		if (length > 1000) {
+			return Math.ceil(length) + "m";
+		} else {
+			return Math.ceil(length / 1000) + "km";
+		}
 	}
 }

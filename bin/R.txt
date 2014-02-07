@@ -63,8 +63,9 @@ int drawable ic_plusone_medium_off_client 0x7f02001f
 int drawable ic_plusone_small_off_client 0x7f020020
 int drawable ic_plusone_standard_off_client 0x7f020021
 int drawable ic_plusone_tall_off_client 0x7f020022
-int id action_settings 0x7f050009
+int id action_settings 0x7f05000a
 int id hybrid 0x7f050004
+int id infoBox 0x7f050009
 int id map 0x7f050006
 int id none 0x7f050000
 int id normal 0x7f050001
