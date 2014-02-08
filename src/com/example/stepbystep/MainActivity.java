@@ -1,7 +1,5 @@
 package com.example.stepbystep;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import android.content.Context;
@@ -13,12 +11,10 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.text.format.Time;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,11 +29,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	LocationManager locationManager;
 	LocationListener locationListener;
 	boolean running = false;
+	long startTime = 0;
 
 	Polyline line;
-
-	// time
-	Date startTime = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +63,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		final String provider = locationManager.getBestProvider(criteria, true);
 
 		locationManager.requestLocationUpdates(
-				LocationManager.NETWORK_PROVIDER, 1, 10, this);
-
+				LocationManager.NETWORK_PROVIDER, 0, 0, this);
+		locationManager.requestLocationUpdates(
+				LocationManager.GPS_PROVIDER, 0, 0, this);
 		// Butonlar
 		final Button startButton = (Button) findViewById(R.id.startButton);
 		final Button stopButton = (Button) findViewById(R.id.stopButton);
@@ -86,11 +81,11 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				running = true;
 				infoBox.setText("Konum Bilgileri Alýnýyor..");
 
-				// starttime 'ý toplam süre hesabýný bulurken kullanýcaz.
-				startTime = new Date();
+				// starttime 'ý toplam süre hesabýný bulurken kullanacaðýz.
+				startTime = System.currentTimeMillis();
 
 				// son bilinen lokasyon deðeri marker ekleme ve polyline çizmek
-				// için kullacaðýz.
+				// için kullanacaðýz.
 				Location currentLocation = locationManager
 						.getLastKnownLocation(provider);
 				double firstLatitude = currentLocation.getLatitude();
@@ -121,8 +116,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 			@Override
 			public void onClick(View arg0) {
 				running = false;
+
 				// son bilinen lokasyon deðeri marker ekleme ve polyline çizmek
-				// için kullacaðýz.
+				// için kullanacaðýz.
 				Location currentLocation = locationManager
 						.getLastKnownLocation(provider);
 				double lastLatitude = currentLocation.getLatitude();
@@ -141,6 +137,16 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				points.add(endLatLng);
 				line.setPoints(points);
 
+				// Toplam sürenin yazdýrýlmasý.
+				long finishTime = System.currentTimeMillis();
+				long diff = (finishTime - startTime) / 1000;
+
+				String totalTime = diff > 60 ? Math.floor(diff / 60) + "dk" : diff + "sn";
+				String totalDistance = getDistance(line);
+
+				infoBox.setText("Toplam Süre: " + totalTime
+						+ "\n Toplam Mesafe: " + totalDistance);
+
 			}
 		});
 	}
@@ -148,18 +154,27 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	@Override
 	public void onLocationChanged(Location arg0) {
 
-		LatLng currentLatLng = new LatLng(arg0.getLatitude(), arg0.getLongitude());
-		
-		googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15));
+		LatLng currentLatLng = new LatLng(arg0.getLatitude(),
+				arg0.getLongitude());
+
+		googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+				currentLatLng, 15));
 
 		if (running) {
 
 			List<LatLng> points = line.getPoints();
 			points.add(currentLatLng);
 			line.setPoints(points);
-			
+
 			final TextView infoBox = (TextView) findViewById(R.id.infoBox);
-			infoBox.setText("Anlýk Hýz :" + arg0.getSpeed() + "Toplam Mesafe:"+getDistance(line));
+			String currentSpeed;
+			if(arg0.getSpeed()>0){
+				 currentSpeed=String.valueOf(arg0.getSpeed());
+			}else{
+				currentSpeed="N/A";
+			}
+			infoBox.setText("Anlýk Hýz :" + currentSpeed
+					+ "\n\n Toplam Mesafe:" + getDistance(line));
 		}
 
 	}
@@ -187,8 +202,8 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		double length = com.google.maps.android.SphericalUtil
 				.computeLength(polyline.getPoints());
 
-		if (length > 1000) {
-			return Math.ceil(length) + "m";
+		if (length < 1000) {
+			return  Math.ceil(length) + "m";
 		} else {
 			return Math.ceil(length / 1000) + "km";
 		}
