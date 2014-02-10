@@ -31,12 +31,12 @@
           android:visibility="invisible" />
 
       <TextView
-         android:id="@+id/infoBox"
-         android:layout_width="fill_parent"
-         android:layout_height="wrap_content" 
-         android:textAlignment="center"
-         android:gravity="center"
-         android:text="Başlamak için butona tıklayın."/>
-      
+          android:id="@+id/infoBox"
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:background="#778899"
+          android:gravity="center"
+          android:text="Başlamak için butona tıklayın."
+           />
      
 </RelativeLayout>

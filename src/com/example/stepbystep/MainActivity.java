@@ -60,12 +60,13 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		Criteria criteria = new Criteria();
-		final String provider = locationManager.getBestProvider(criteria, true);
-
 		locationManager.requestLocationUpdates(
 				LocationManager.NETWORK_PROVIDER, 0, 0, this);
 		locationManager.requestLocationUpdates(
 				LocationManager.GPS_PROVIDER, 0, 0, this);
+		final String provider = locationManager.getBestProvider(criteria, true);
+
+		
 		// Butonlar
 		final Button startButton = (Button) findViewById(R.id.startButton);
 		final Button stopButton = (Button) findViewById(R.id.stopButton);
@@ -98,15 +99,16 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				googleMap.addMarker(new MarkerOptions().position(
 						new LatLng(firstLatitude, firstLongitude)).title("A"));
 
-				// baþla butonuna týklanýnca bitir butonun görünür olmasýný
-				// saðlýyoruz.
-				startButton.setVisibility(View.INVISIBLE);
-				stopButton.setVisibility(View.VISIBLE);
 
 				// enlem boylam bilgisini polyline'a ekliyoruz.
 				List<LatLng> points = line.getPoints();
 				points.add(startLatLng);
 				line.setPoints(points);
+				
+				// baþla butonuna týklanýnca bitir butonun görünür olmasýný
+				// saðlýyoruz.
+				startButton.setVisibility(View.INVISIBLE);
+				stopButton.setVisibility(View.VISIBLE);
 
 			}
 		});
@@ -141,11 +143,17 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				long finishTime = System.currentTimeMillis();
 				long diff = (finishTime - startTime) / 1000;
 
-				String totalTime = diff > 60 ? Math.floor(diff / 60) + "dk" : diff + "sn";
-				String totalDistance = getDistance(line);
-
+				String totalTime = diff > 59 ?  Math.ceil(diff / 60) + "dk" : diff + "sn";
+				double totalDistance = getDistance(line);
+				int distance=(int)totalDistance;
+				
+				if(distance<1000){//toplam mesafe double to ing metre	
 				infoBox.setText("Toplam Süre: " + totalTime
-						+ "\n Toplam Mesafe: " + totalDistance);
+						+ "\n Toplam Mesafe: " + distance + "m");
+				}else{
+					infoBox.setText("Toplam Süre: " + totalTime
+							+ "\n Toplam Mesafe: " + distance + "km");
+				}
 
 			}
 		});
@@ -198,14 +206,14 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 	}
 
-	public String getDistance(Polyline polyline) {
+	public double getDistance(Polyline polyline) {
 		double length = com.google.maps.android.SphericalUtil
 				.computeLength(polyline.getPoints());
 
 		if (length < 1000) {
-			return  Math.ceil(length) + "m";
+			return  Math.ceil(length);
 		} else {
-			return Math.ceil(length / 1000) + "km";
+			return Math.ceil(length / 1000);
 		}
 	}
 }
