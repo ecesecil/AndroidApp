@@ -1,6 +1,8 @@
 package com.example.stepbystep;
 
+import java.sql.Date;
 import java.util.List;
+import java.util.UUID;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -8,14 +10,19 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.text.format.DateFormat;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.apigee.sdk.ApigeeClient;
+import com.apigee.sdk.data.client.DataClient;
+import com.apigee.sdk.data.client.entities.Entity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -31,7 +38,11 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	boolean running = false;
 	long startTime = 0;
 
+	DataClient dataclient;
+
 	Polyline line;
+	// uniqe id tanmlanmasý
+	UUID tripId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +54,18 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		// apigee
+
+		String ORGNAME = "ecesecil";
+		String APPNAME = "sandbox";
+
+		ApigeeClient apigeeclient = new ApigeeClient(ORGNAME, APPNAME,
+				this.getBaseContext());
+		this.dataclient = apigeeclient.getDataClient();
+		this.dataclient.setClientId("b3U6fVdBBYHaEeKN3ALoGuZA3A");
+		this.dataclient.setClientSecret("b3U6nJ4qCITa7zK42AArUqRUCihr6Bc");
+
 	}
 
 	private void initilizeMap() {
@@ -62,11 +85,10 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		Criteria criteria = new Criteria();
 		locationManager.requestLocationUpdates(
 				LocationManager.NETWORK_PROVIDER, 0, 0, this);
-		locationManager.requestLocationUpdates(
-				LocationManager.GPS_PROVIDER, 0, 0, this);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
+				0, this);
 		final String provider = locationManager.getBestProvider(criteria, true);
 
-		
 		// Butonlar
 		final Button startButton = (Button) findViewById(R.id.startButton);
 		final Button stopButton = (Button) findViewById(R.id.stopButton);
@@ -81,6 +103,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 				running = true;
 				infoBox.setText("Konum Bilgileri Alýnýyor..");
+
+				// id ye deðer atama iþlemi için
+				tripId = UUID.randomUUID();
 
 				// starttime 'ý toplam süre hesabýný bulurken kullanacaðýz.
 				startTime = System.currentTimeMillis();
@@ -99,12 +124,14 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				googleMap.addMarker(new MarkerOptions().position(
 						new LatLng(firstLatitude, firstLongitude)).title("A"));
 
-
 				// enlem boylam bilgisini polyline'a ekliyoruz.
 				List<LatLng> points = line.getPoints();
 				points.add(startLatLng);
 				line.setPoints(points);
-				
+
+				// sent to apigee
+				sentApigee(currentLocation);
+
 				// baþla butonuna týklanýnca bitir butonun görünür olmasýný
 				// saðlýyoruz.
 				startButton.setVisibility(View.INVISIBLE);
@@ -138,25 +165,46 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				List<LatLng> points = line.getPoints();
 				points.add(endLatLng);
 				line.setPoints(points);
+				
+				sentApigee(currentLocation);
+				
+			
 
 				// Toplam sürenin yazdýrýlmasý.
 				long finishTime = System.currentTimeMillis();
 				long diff = (finishTime - startTime) / 1000;
 
-				String totalTime = diff > 59 ?  Math.ceil(diff / 60) + "dk" : diff + "sn";
+				String totalTime = diff > 59 ? Math.ceil(diff / 60) + "dk"
+						: diff + "sn";
 				double totalDistance = getDistance(line);
-				int distance=(int)totalDistance;
-				
-				if(distance<1000){//toplam mesafe double to ing metre	
-				infoBox.setText("Toplam Süre: " + totalTime
-						+ "\n Toplam Mesafe: " + distance + "m");
-				}else{
+				int distance = (int) totalDistance;
+
+				if (distance < 1000) {// toplam mesafe double to ing metre
+					infoBox.setText("Toplam Süre: " + totalTime
+							+ "\n Toplam Mesafe: " + distance + "m");
+				} else {
 					infoBox.setText("Toplam Süre: " + totalTime
 							+ "\n Toplam Mesafe: " + distance + "km");
 				}
 
 			}
 		});
+
+	}
+
+	public void sentApigee(Location location) {
+		System.out.println(location.toString());
+		Entity loc = new Entity();
+		loc.setType("sbs");
+		loc.setDataClient(this.dataclient);
+
+		loc.setProperty("lat", (float) location.getLatitude());
+		loc.setProperty("lng", (float) location.getLongitude());
+		loc.setProperty("speed", location.getSpeed());
+		loc.setUuid(tripId);
+		loc.setProperty("date", location.getTime());
+		EntitiyPoster poster = new EntitiyPoster();
+		poster.execute(loc);
 	}
 
 	@Override
@@ -173,17 +221,19 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 			List<LatLng> points = line.getPoints();
 			points.add(currentLatLng);
 			line.setPoints(points);
+			sentApigee(arg0);
 
 			final TextView infoBox = (TextView) findViewById(R.id.infoBox);
 			String currentSpeed;
-			if(arg0.getSpeed()>0){
-				 currentSpeed=String.valueOf(arg0.getSpeed());
-			}else{
-				currentSpeed="N/A";
+			if (arg0.getSpeed() > 0) {
+				currentSpeed = String.valueOf(arg0.getSpeed());
+			} else {
+				currentSpeed = "N/A";
 			}
 			infoBox.setText("Anlýk Hýz :" + currentSpeed
 					+ "\n\n Toplam Mesafe:" + getDistance(line));
 		}
+		
 
 	}
 
@@ -211,9 +261,22 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				.computeLength(polyline.getPoints());
 
 		if (length < 1000) {
-			return  Math.ceil(length);
+			return Math.ceil(length);
 		} else {
 			return Math.ceil(length / 1000);
 		}
 	}
+
+	private class EntitiyPoster extends AsyncTask<Entity, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Entity... params) {
+			Entity entity = params[0];
+			entity.save();
+			return null;
+		}
+
+	}
+
+	
 }
