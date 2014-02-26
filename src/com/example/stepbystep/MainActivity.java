@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -272,6 +273,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		@Override
 		protected Void doInBackground(Entity... params) {
 			Entity entity = params[0];
+			Log.i("location denemesi", params[0].toString());
 			entity.save();
 			return null;
 		}
