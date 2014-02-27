@@ -1,8 +1,18 @@
 package com.example.stepbystep;
 
-import java.sql.Date;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.UUID;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONObject;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -14,16 +24,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
-
 import com.apigee.sdk.ApigeeClient;
 import com.apigee.sdk.data.client.DataClient;
-import com.apigee.sdk.data.client.entities.Entity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -43,7 +50,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 	Polyline line;
 	// uniqe id tanmlanmasý
-	UUID tripId;
+	static UUID tripId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -168,9 +175,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				line.setPoints(points);
 				
 				sentApigee(currentLocation);
-				
 			
-
 				// Toplam sürenin yazdýrýlmasý.
 				long finishTime = System.currentTimeMillis();
 				long diff = (finishTime - startTime) / 1000;
@@ -194,18 +199,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	}
 
 	public void sentApigee(Location location) {
-		System.out.println(location.toString());
-		Entity loc = new Entity();
-		loc.setType("sbs");
-		loc.setDataClient(this.dataclient);
-
-		loc.setProperty("lat", (float) location.getLatitude());
-		loc.setProperty("lng", (float) location.getLongitude());
-		loc.setProperty("speed", location.getSpeed());
-		loc.setUuid(tripId);
-		loc.setProperty("date", location.getTime());
-		EntitiyPoster poster = new EntitiyPoster();
-		poster.execute(loc);
+		new HttpAsyncTask().execute(location);
 	}
 
 	@Override
@@ -222,8 +216,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 			List<LatLng> points = line.getPoints();
 			points.add(currentLatLng);
 			line.setPoints(points);
+			
 			sentApigee(arg0);
-
+			
 			final TextView infoBox = (TextView) findViewById(R.id.infoBox);
 			String currentSpeed;
 			if (arg0.getSpeed() > 0) {
@@ -253,7 +248,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 		// TODO Auto-generated method stub
-		System.out.println("STATUS CHANGED");
+		//System.out.println("STATUS CHANGED");
 
 	}
 
@@ -268,17 +263,72 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		}
 	}
 
-	private class EntitiyPoster extends AsyncTask<Entity, Void, Void> {
+    private static String convertInputStreamToString(InputStream inputStream) throws IOException{
+        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+        String line = "";
+        String result = "";
+        while((line = bufferedReader.readLine()) != null)
+            result += line;
+ 
+        inputStream.close();
+        return result;
+ 
+    }
+    
+    private class HttpAsyncTask extends AsyncTask<Location, Void, Void> {
+        @Override
+        protected Void doInBackground(Location... params) {
+        	Location location = params[0];
+    		InputStream inputStream = null;
+    		String result = "";
+    		try {
+    			// 1. create HttpClient
+    			HttpClient httpclient = new DefaultHttpClient();
+    			
+    			// 2. make POST request to the given URL
+                HttpPost httpPost = new HttpPost("https://api.usergrid.com/ecesecil/sandbox/anils");
+     
+                String json = "";
+                
+                // 3. build jsonObject
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.accumulate("lat", location.getLatitude());
+                jsonObject.accumulate("lng", location.getLongitude());
+                jsonObject.accumulate("speed",location.getSpeed());
+                jsonObject.accumulate("tripId",tripId);
+                
+                
+                // 4. convert JSONObject to JSON to String
+                json = jsonObject.toString();
+                
+                // 5. set json to StringEntity
+                StringEntity se = new StringEntity(json);
+                
+                // 6. set httpPost Entity
+                httpPost.setEntity(se);
+                
+                // 7. Set some headers to inform server about the type of the content   
+                httpPost.setHeader("Accept", "application/json");
+                httpPost.setHeader("Content-type", "application/json");
+                
+                // 8. Execute POST request to the given URL
+                HttpResponse httpResponse = httpclient.execute(httpPost);
+                
+                inputStream = httpResponse.getEntity().getContent();
+                
+                // 10. convert inputstream to string
+                if(inputStream != null)
+                    result = convertInputStreamToString(inputStream);
+                else
+                    result = "Did not work!";
+                
+    		} catch (Exception e) {
+    			
+    			Log.e("hata:",e.getClass().toString());  
+    		}
+    		
+            return null;
+        }
+    }
 
-		@Override
-		protected Void doInBackground(Entity... params) {
-			Entity entity = params[0];
-			Log.i("location denemesi", params[0].toString());
-			entity.save();
-			return null;
-		}
-
-	}
-
-	
 }
