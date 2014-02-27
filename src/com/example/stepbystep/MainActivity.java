@@ -29,8 +29,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
-import com.apigee.sdk.ApigeeClient;
-import com.apigee.sdk.data.client.DataClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -46,8 +44,6 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	boolean running = false;
 	long startTime = 0;
 
-	DataClient dataclient;
-
 	Polyline line;
 	// uniqe id tanmlanmasý
 	static UUID tripId;
@@ -62,17 +58,6 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		// apigee
-
-		String ORGNAME = "ecesecil";
-		String APPNAME = "sandbox";
-
-		ApigeeClient apigeeclient = new ApigeeClient(ORGNAME, APPNAME,
-				this.getBaseContext());
-		this.dataclient = apigeeclient.getDataClient();
-		this.dataclient.setClientId("b3U6fVdBBYHaEeKN3ALoGuZA3A");
-		this.dataclient.setClientSecret("b3U6nJ4qCITa7zK42AArUqRUCihr6Bc");
 
 	}
 
