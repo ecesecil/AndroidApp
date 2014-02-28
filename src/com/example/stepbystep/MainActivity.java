@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +34,7 @@ import android.widget.TextView;
 import com.apigee.sdk.ApigeeClient;
 import com.apigee.sdk.data.client.DataClient;
 import com.apigee.sdk.data.client.callbacks.ApiResponseCallback;
+import com.apigee.sdk.data.client.entities.Entity;
 import com.apigee.sdk.data.client.response.ApiResponse;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -41,7 +43,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.example.stepbystep.UsergridActivity;
 public class MainActivity extends FragmentActivity implements LocationListener {
 	GoogleMap googleMap;
 	LocationManager locationManager;
@@ -336,7 +337,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
     	//specify a valid query string
 //    	String query = "select * where location within 150 of "+ location.getLatitude()+","+location.getLongitude() +" &limit=1";
     	
-    	String query = "location within 20 of 40.9773885304496,29.106852784752846";
+    	String query = "location within 20 of  40.97699973254221,29.10699225962162";
 
     	  
     	//call getEntitiesAsync to initiate the asynchronous API call    
@@ -353,7 +354,15 @@ public class MainActivity extends FragmentActivity implements LocationListener {
     		public void onResponse(ApiResponse response) {
     		    try { 
     		        if (response != null) {
-    		        	System.out.println("gelen entitiler:"+response.getFirstEntity());
+    		        	
+    		        	List<Entity> entityList=response.getEntities();
+    		        	Log.i("enititiler:","geldi,geldi");
+    		        	Iterator<Entity> itr=entityList.iterator();
+    		        	while(itr.hasNext()){
+    		        		Entity entity=itr.next();
+    		        		System.out.println(entity);
+    		        	}
+
     		        }
     		    } catch (Exception e) { //The API request returned an error
     		        	// Fail
