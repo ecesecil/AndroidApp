@@ -29,6 +29,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.apigee.sdk.ApigeeClient;
+import com.apigee.sdk.data.client.DataClient;
+import com.apigee.sdk.data.client.callbacks.ApiResponseCallback;
+import com.apigee.sdk.data.client.response.ApiResponse;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -36,7 +41,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
+import com.example.stepbystep.UsergridActivity;
 public class MainActivity extends FragmentActivity implements LocationListener {
 	GoogleMap googleMap;
 	LocationManager locationManager;
@@ -124,6 +129,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 				// sent to apigee
 				sentApigee(currentLocation);
+				getNearestLocation(currentLocation);
 
 				// baþla butonuna týklanýnca bitir butonun görünür olmasýný
 				// saðlýyoruz.
@@ -316,4 +322,47 @@ public class MainActivity extends FragmentActivity implements LocationListener {
         }
     }
 
+    
+    public void getNearestLocation(Location location){
+    	//Create client entity
+    	String ORGNAME = "ecesecil";
+    	String APPNAME = "sandbox";        
+    	ApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME,this.getBaseContext());
+    	DataClient dataClient = apigeeClient.getDataClient();
+
+    	//specify the entity collection to query
+    	String type = "deneme";
+
+    	//specify a valid query string
+//    	String query = "select * where location within 150 of "+ location.getLatitude()+","+location.getLongitude() +" &limit=1";
+    	
+    	String query = "location within 20 of 40.9773885304496,29.106852784752846";
+
+    	  
+    	//call getEntitiesAsync to initiate the asynchronous API call    
+    	dataClient.getEntitiesAsync(type, query, new ApiResponseCallback() {	
+    		
+    		//If getEntitiesAsync fails, catch the error
+    		@Override
+    		public void onException(Exception e) { 
+    			// Error
+    		}
+    		
+    		//If getEntitiesAsync is successful, handle the response object
+    		@Override
+    		public void onResponse(ApiResponse response) {
+    		    try { 
+    		        if (response != null) {
+    		        	System.out.println("gelen entitiler:"+response.getFirstEntity());
+    		        }
+    		    } catch (Exception e) { //The API request returned an error
+    		        	// Fail
+    		    }
+    		}
+    	});	
+    	
+    }
+    
+    
+    
 }
