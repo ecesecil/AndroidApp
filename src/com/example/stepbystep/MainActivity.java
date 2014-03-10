@@ -43,6 +43,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
 public class MainActivity extends FragmentActivity implements LocationListener {
 	GoogleMap googleMap;
 	LocationManager locationManager;
@@ -165,9 +166,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 				List<LatLng> points = line.getPoints();
 				points.add(endLatLng);
 				line.setPoints(points);
-				
+
 				sentApigee(currentLocation);
-			
+
 				// Toplam sürenin yazdýrýlmasý.
 				long finishTime = System.currentTimeMillis();
 				long diff = (finishTime - startTime) / 1000;
@@ -208,9 +209,9 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 			List<LatLng> points = line.getPoints();
 			points.add(currentLatLng);
 			line.setPoints(points);
-			
+
 			sentApigee(arg0);
-			
+
 			final TextView infoBox = (TextView) findViewById(R.id.infoBox);
 			String currentSpeed;
 			if (arg0.getSpeed() > 0) {
@@ -221,7 +222,6 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 			infoBox.setText("Anlýk Hýz :" + currentSpeed
 					+ "\n\n Toplam Mesafe:" + getDistance(line));
 		}
-		
 
 	}
 
@@ -240,7 +240,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 		// TODO Auto-generated method stub
-		//System.out.println("STATUS CHANGED");
+		// System.out.println("STATUS CHANGED");
 
 	}
 
@@ -255,123 +255,134 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		}
 	}
 
-    private static String convertInputStreamToString(InputStream inputStream) throws IOException{
-        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
-        String line = "";
-        String result = "";
-        while((line = bufferedReader.readLine()) != null)
-            result += line;
- 
-        inputStream.close();
-        return result;
- 
-    }
-    
-    private class HttpAsyncTask extends AsyncTask<Location, Void, Void> {
-        @Override
-        protected Void doInBackground(Location... params) {
-        	Location location = params[0];
-    		InputStream inputStream = null;
-    		String result = "";
-    		try {
-    			// 1. create HttpClient
-    			HttpClient httpclient = new DefaultHttpClient();
-    			
-    			// 2. make POST request to the given URL
-                HttpPost httpPost = new HttpPost("https://api.usergrid.com/ecesecil/sandbox/anils");
-     
-                String json = "";
-                
-                // 3. build jsonObject
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.accumulate("lat", location.getLatitude());
-                jsonObject.accumulate("lng", location.getLongitude());
-                jsonObject.accumulate("speed",location.getSpeed());
-                jsonObject.accumulate("tripId",tripId);
-                
-                
-                // 4. convert JSONObject to JSON to String
-                json = jsonObject.toString();
-                
-                // 5. set json to StringEntity
-                StringEntity se = new StringEntity(json);
-                
-                // 6. set httpPost Entity
-                httpPost.setEntity(se);
-                
-                // 7. Set some headers to inform server about the type of the content   
-                httpPost.setHeader("Accept", "application/json");
-                httpPost.setHeader("Content-type", "application/json");
-                
-                // 8. Execute POST request to the given URL
-                HttpResponse httpResponse = httpclient.execute(httpPost);
-                
-                inputStream = httpResponse.getEntity().getContent();
-                
-                // 10. convert inputstream to string
-                if(inputStream != null)
-                    result = convertInputStreamToString(inputStream);
-                else
-                    result = "Did not work!";
-                
-    		} catch (Exception e) {
-    			
-    			Log.e("hata:",e.getClass().toString());  
-    		}
-    		
-            return null;
-        }
-    }
+	private static String convertInputStreamToString(InputStream inputStream)
+			throws IOException {
+		BufferedReader bufferedReader = new BufferedReader(
+				new InputStreamReader(inputStream));
+		String line = "";
+		String result = "";
+		while ((line = bufferedReader.readLine()) != null)
+			result += line;
 
-    
-    public void getNearestLocation(Location location){
-    	//Create client entity
-    	String ORGNAME = "ecesecil";
-    	String APPNAME = "sandbox";        
-    	ApigeeClient apigeeClient = new ApigeeClient(ORGNAME,APPNAME,this.getBaseContext());
-    	DataClient dataClient = apigeeClient.getDataClient();
+		inputStream.close();
+		return result;
 
-    	//specify the entity collection to query
-    	String type = "deneme";
+	}
 
-    	//specify a valid query string
-//    	String query = "select * where location within 150 of "+ location.getLatitude()+","+location.getLongitude() +" &limit=1";
-    	
-    	String query = "location within 20 of  40.97699973254221,29.10699225962162";
+	private class HttpAsyncTask extends AsyncTask<Location, Void, Void> {
+		@Override
+		protected Void doInBackground(Location... params) {
+			Location location = params[0];
+			InputStream inputStream = null;
+			String result = "";
+			try {
+				// 1. create HttpClient
+				HttpClient httpclient = new DefaultHttpClient();
 
-    	  
-    	//call getEntitiesAsync to initiate the asynchronous API call    
-    	dataClient.getEntitiesAsync(type, query, new ApiResponseCallback() {	
-    		
-    		//If getEntitiesAsync fails, catch the error
-    		@Override
-    		public void onException(Exception e) { 
-    			// Error
-    		}
-    		
-    		//If getEntitiesAsync is successful, handle the response object
-    		@Override
-    		public void onResponse(ApiResponse response) {
-    		    try { 
-    		        if (response != null) {
-    		        	
-    		        	List<Entity> entityList=response.getEntities();
-    		        	Log.i("enititiler:","geldi,geldi");
-    		        	Iterator<Entity> itr=entityList.iterator();
-    		        	while(itr.hasNext()){
-    		        		Entity entity=itr.next();
-    		        		System.out.println(entity);
-    		        	}
+				// 2. make POST request to the given URL
+				HttpPost httpPost = new HttpPost(
+						"https://api.usergrid.com/ecesecil/sandbox/anils");
 
-    		        }
-    		    } catch (Exception e) { //The API request returned an error
-    		        	// Fail
-    		    }
-    		}
-    	});	
-    	
-    }
-    
-    
-    
+				String json = "";
+
+				// 3. build jsonObject
+				JSONObject jsonObject = new JSONObject();
+				jsonObject.accumulate("lat", location.getLatitude());
+				jsonObject.accumulate("lng", location.getLongitude());
+				jsonObject.accumulate("speed", location.getSpeed());
+				jsonObject.accumulate("tripId", tripId);
+
+				// 4. convert JSONObject to JSON to String
+				json = jsonObject.toString();
+
+				// 5. set json to StringEntity
+				StringEntity se = new StringEntity(json);
+
+				// 6. set httpPost Entity
+				httpPost.setEntity(se);
+
+				// 7. Set some headers to inform server about the type of the
+				// content
+				httpPost.setHeader("Accept", "application/json");
+				httpPost.setHeader("Content-type", "application/json");
+
+				// 8. Execute POST request to the given URL
+				HttpResponse httpResponse = httpclient.execute(httpPost);
+
+				inputStream = httpResponse.getEntity().getContent();
+
+				// 10. convert inputstream to string
+				if (inputStream != null)
+					result = convertInputStreamToString(inputStream);
+				else
+					result = "Did not work!";
+
+			} catch (Exception e) {
+
+				Log.e("hata:", e.getClass().toString());
+			}
+
+			return null;
+		}
+	}
+
+	public void getNearestLocation(Location location) {
+		// Create client entity
+		String ORGNAME = "ecesecil";
+		String APPNAME = "sandbox";
+		ApigeeClient apigeeClient = new ApigeeClient(ORGNAME, APPNAME,
+				this.getBaseContext());
+		DataClient dataClient = apigeeClient.getDataClient();
+
+		// specify the entity collection to query
+		String type = "deneme";
+
+		// specify a valid query string
+		// String query = "select * where location within 150 of "+
+		// location.getLatitude()+","+location.getLongitude() +" &limit=1";
+
+		String query = "select * where location within 20 of  40.97699973254221,29.10699225962162";
+
+		// call getEntitiesAsync to initiate the asynchronous API call
+		dataClient.getEntitiesAsync(type, query, new ApiResponseCallback() {
+
+			// If getEntitiesAsync fails, catch the error
+			@Override
+			public void onException(Exception e) {
+				// Error
+			}
+
+			// If getEntitiesAsync is successful, handle the response object
+			@Override
+			public void onResponse(ApiResponse response) {
+				try {
+					if (response != null) {
+						List<Entity> entityList=response.getEntities();
+						if(entityList!=null){
+							JSONObject jsonObject;
+							double c = 0;
+							for (Entity entity : entityList) {
+								jsonObject = new JSONObject(entity.getProperties().get("location").toString());
+								c+=jsonObject.getDouble("speed");
+								System.out.println("speed = "+jsonObject.getDouble("speed"));
+							}
+							System.out.println("ortalama hýz:"+c/entityList.size());
+						}
+						//avarageSpeed(entityList);
+					}
+				} catch (Exception e) { // The API request returned an error
+					e.printStackTrace();
+				}
+			}
+		});
+
+	}
+	
+	public void avarageSpeed(List<Entity> entityList){
+		for (int j = 0; j < entityList.size(); j++) {
+			Entity myEntity = entityList.get(j);
+			System.out.println(myEntity);
+		}
+	}
+		//entitiyList'in parse edilmesi lazýmç.
 }
