@@ -4,8 +4,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -95,6 +98,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 		// TextView bir deðiþkene atandý.
 		final TextView infoBox = (TextView) findViewById(R.id.infoBox);
+
 
 		startButton.setOnClickListener(new OnClickListener() {
 
@@ -240,9 +244,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 		// TODO Auto-generated method stub
-		// System.out.println("STATUS CHANGED");
-
-	}
+		}
 
 	public double getDistance(Polyline polyline) {
 		double length = com.google.maps.android.SphericalUtil
@@ -333,15 +335,36 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		ApigeeClient apigeeClient = new ApigeeClient(ORGNAME, APPNAME,
 				this.getBaseContext());
 		DataClient dataClient = apigeeClient.getDataClient();
+		
+		
+		// Gridlerin ortanoktalarýnýn listesi sql stringdeki sorgu bunlara göre yapýlacak
+		List<LatLng> gridMidPoints= new ArrayList<LatLng>();
+		gridMidPoints.add(new LatLng(40.97422138080048,29.0997175395353));
+		gridMidPoints.add(new LatLng(40.973395142841085,29.100200906395912));
+		gridMidPoints.add(new LatLng(40.97257699505776,29.100662463647463));
+		gridMidPoints.add(new LatLng(40.97171833399712,29.101102128624916));
+		gridMidPoints.add(new LatLng(40.9709001654198,29.101606383919716));
+		gridMidPoints.add(new LatLng(40.970041482535926,29.102078452706337));
+		gridMidPoints.add(new LatLng(40.96919899035504,29.10251833498478));
+		gridMidPoints.add(new LatLng(40.96837268949781,29.10303331911564));
+		gridMidPoints.add(new LatLng(40.96753966953534,29.103535562753677));
+		gridMidPoints.add(new LatLng(40.966719360540196,29.104050882160664));
+		gridMidPoints.add(new LatLng(40.9659254339995,29.10461414605379));
+		gridMidPoints.add(new LatLng(40.96513554862575,29.105198867619038));
+		
+		
+		
 
 		// specify the entity collection to query
-		String type = "deneme";
-
+		String type = "stepbystep";
+		
+		//gridlerin baþ/orta/son noktalarý dizide tutulacak.
+		
+	
 		// specify a valid query string
-		// String query = "select * where location within 150 of "+
-		// location.getLatitude()+","+location.getLongitude() +" &limit=1";
-
-		String query = "select * where location within 20 of  40.97699973254221,29.10699225962162";
+		double lat=gridMidPoints.get(0).latitude;
+		double lng=gridMidPoints.get(0).longitude;
+		String query = "select * where location within 50 of lat,lng";
 
 		// call getEntitiesAsync to initiate the asynchronous API call
 		dataClient.getEntitiesAsync(type, query, new ApiResponseCallback() {
@@ -357,18 +380,21 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 			public void onResponse(ApiResponse response) {
 				try {
 					if (response != null) {
-						List<Entity> entityList=response.getEntities();
-						if(entityList!=null){
+						List<Entity> entityList = response.getEntities();
+						if (entityList != null) {
 							JSONObject jsonObject;
 							double c = 0;
 							for (Entity entity : entityList) {
-								jsonObject = new JSONObject(entity.getProperties().get("location").toString());
-								c+=jsonObject.getDouble("speed");
-								System.out.println("speed = "+jsonObject.getDouble("speed"));
+								jsonObject = new JSONObject(entity
+										.getProperties().get("location")
+										.toString());
+								c += jsonObject.getDouble("speed");
+								System.out.println("speed = "
+										+ jsonObject.getDouble("speed"));
 							}
-							System.out.println("ortalama hýz:"+c/entityList.size());
+							System.out.println("ortalama hýz:" + c
+									/ entityList.size());
 						}
-						//avarageSpeed(entityList);
 					}
 				} catch (Exception e) { // The API request returned an error
 					e.printStackTrace();
@@ -377,12 +403,6 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		});
 
 	}
-	
-	public void avarageSpeed(List<Entity> entityList){
-		for (int j = 0; j < entityList.size(); j++) {
-			Entity myEntity = entityList.get(j);
-			System.out.println(myEntity);
-		}
-	}
-		//entitiyList'in parse edilmesi lazýmç.
+
+
 }
