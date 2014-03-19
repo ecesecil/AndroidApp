@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.UUID;
 
 import org.apache.http.HttpResponse;
@@ -54,7 +51,10 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	boolean running = false;
 	long startTime = 0;
 
+	List<LatLng[]> route;
 	Polyline line;
+	Polyline gridLine;
+
 	// uniqe id tanmlanmasý
 	static UUID tripId;
 
@@ -98,7 +98,6 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 		// TextView bir deðiþkene atandý.
 		final TextView infoBox = (TextView) findViewById(R.id.infoBox);
-
 
 		startButton.setOnClickListener(new OnClickListener() {
 
@@ -244,7 +243,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 		// TODO Auto-generated method stub
-		}
+	}
 
 	public double getDistance(Polyline polyline) {
 		double length = com.google.maps.android.SphericalUtil
@@ -335,74 +334,153 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		ApigeeClient apigeeClient = new ApigeeClient(ORGNAME, APPNAME,
 				this.getBaseContext());
 		DataClient dataClient = apigeeClient.getDataClient();
-		
-		
-		// Gridlerin ortanoktalarýnýn listesi sql stringdeki sorgu bunlara göre yapýlacak
-		List<LatLng> gridMidPoints= new ArrayList<LatLng>();
-		gridMidPoints.add(new LatLng(40.97422138080048,29.0997175395353));
-		gridMidPoints.add(new LatLng(40.973395142841085,29.100200906395912));
-		gridMidPoints.add(new LatLng(40.97257699505776,29.100662463647463));
-		gridMidPoints.add(new LatLng(40.97171833399712,29.101102128624916));
-		gridMidPoints.add(new LatLng(40.9709001654198,29.101606383919716));
-		gridMidPoints.add(new LatLng(40.970041482535926,29.102078452706337));
-		gridMidPoints.add(new LatLng(40.96919899035504,29.10251833498478));
-		gridMidPoints.add(new LatLng(40.96837268949781,29.10303331911564));
-		gridMidPoints.add(new LatLng(40.96753966953534,29.103535562753677));
-		gridMidPoints.add(new LatLng(40.966719360540196,29.104050882160664));
-		gridMidPoints.add(new LatLng(40.9659254339995,29.10461414605379));
-		gridMidPoints.add(new LatLng(40.96513554862575,29.105198867619038));
-		
-		
-		
 
-		// specify the entity collection to query
-		String type = "stepbystep";
-		
-		//gridlerin baþ/orta/son noktalarý dizide tutulacak.
-		
-	
-		// specify a valid query string
-		double lat=gridMidPoints.get(0).latitude;
-		double lng=gridMidPoints.get(0).longitude;
-		String query = "select * where location within 50 of lat,lng";
+		// gridlerin baþ/orta/son noktalarý dizide tutulacak.
+		route = new ArrayList<LatLng[]>();
+		route.add(new LatLng[] {
+				new LatLng(40.974654746573385, 29.09951962530613),
+				new LatLng(40.97422138080048, 29.0997175395353),
+				new LatLng(40.97381636348592, 29.09998632967472) });
 
-		// call getEntitiesAsync to initiate the asynchronous API call
-		dataClient.getEntitiesAsync(type, query, new ApiResponseCallback() {
+		route.add(new LatLng[] {
+				new LatLng(40.97381636348592, 29.09998632967472),
+				new LatLng(40.973395142841085, 29.100200906395912),
+				new LatLng(40.97297391950688, 29.100426211953163) });
 
-			// If getEntitiesAsync fails, catch the error
-			@Override
-			public void onException(Exception e) {
-				// Error
-			}
+		route.add(new LatLng[] {
+				new LatLng(40.97297391950688, 29.100426211953163),
+				new LatLng(40.97257699505776, 29.100662463647463),
+				new LatLng(40.972139565347824, 29.100887551903725) });
 
-			// If getEntitiesAsync is successful, handle the response object
-			@Override
-			public void onResponse(ApiResponse response) {
-				try {
-					if (response != null) {
-						List<Entity> entityList = response.getEntities();
-						if (entityList != null) {
-							JSONObject jsonObject;
-							double c = 0;
-							for (Entity entity : entityList) {
-								jsonObject = new JSONObject(entity
-										.getProperties().get("location")
-										.toString());
-								c += jsonObject.getDouble("speed");
-								System.out.println("speed = "
-										+ jsonObject.getDouble("speed"));
-							}
-							System.out.println("ortalama hýz:" + c
-									/ entityList.size());
+		route.add(new LatLng[] {
+				new LatLng(40.972139565347824, 29.100887551903725),
+				new LatLng(40.97171833399712, 29.101102128624916),
+				new LatLng(40.97131330131605, 29.101348891854286) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.97131330131605, 29.101348891854286),
+				new LatLng(40.9709001654198, 29.101606383919716),
+				new LatLng(40.97047082537475, 29.101853147149086) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.97047082537475, 29.101853147149086),
+				new LatLng(40.970041482535926, 29.102078452706337),
+				new LatLng(40.969628338676024, 29.102314487099648) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.969628338676024, 29.102314487099648),
+				new LatLng(40.96919899035504, 29.10251833498478),
+				new LatLng(40.96880204319549, 29.102797284722328) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.96880204319549, 29.102797284722328),
+				new LatLng(40.96837268949781, 29.10303331911564),
+				new LatLng(40.96795143409812, 29.10329081118107) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.96795143409812, 29.10329081118107),
+				new LatLng(40.96753966953534, 29.103535562753677),
+				new LatLng(40.967124421421865, 29.103771932423115) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.967124421421865, 29.103771932423115),
+				new LatLng(40.966719360540196, 29.104050882160664),
+				new LatLng(40.9663264491093, 29.104335196316292) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.9663264491093, 29.104335196316292),
+				new LatLng(40.9659254339995, 29.10461414605379),
+				new LatLng(40.96552441645275, 29.1049038246274) });
+
+		route.add(new LatLng[] {
+				new LatLng(40.96552441645275, 29.1049038246274),
+				new LatLng(40.96513554862575, 29.105198867619038),
+				new LatLng(40.964746678507, 29.105504639446735) });
+
+		for (final LatLng[] latLngs : route) {
+			String query = "select * where location within 50 of "
+					+ latLngs[1].latitude + "," + latLngs[1].longitude;
+			// call getEntitiesAsync to initiate the asynchronous API call
+			dataClient.getEntitiesAsync("stepbystep", query,
+					new ApiResponseCallback() {
+
+						@Override
+						public void onException(Exception arg0) {
+
 						}
-					}
-				} catch (Exception e) { // The API request returned an error
-					e.printStackTrace();
-				}
-			}
-		});
 
+						@Override
+						public void onResponse(ApiResponse response) {
+							try {
+								if (response != null) {
+									List<Entity> entityList = response
+											.getEntities();
+									if (entityList != null) {
+										JSONObject jsonObject;
+										double c = 0;
+										for (Entity entity : entityList) {
+											jsonObject = new JSONObject(entity
+													.getProperties()
+													.get("location").toString());
+											c += jsonObject.getDouble("speed");
+											System.out.println("speed = "
+													+ jsonObject
+															.getDouble("speed"));
+										}
+										if (entityList.size() != 0) {
+											double ortalamaHiz = c
+													/ entityList.size();
+											System.out.println("ortalama hýz:"
+													+ ortalamaHiz);
+											gridColor(ortalamaHiz, latLngs);
+											//
+										} else {
+											gridLine = googleMap
+													.addPolyline(new PolylineOptions()
+															.width(5)
+															.color(Color.GRAY)
+															.geodesic(true));
+											List<LatLng> gridPoints = gridLine
+													.getPoints();
+											gridPoints.add(latLngs[0]);
+											gridPoints.add(latLngs[1]);
+											gridPoints.add(latLngs[2]);
+											gridLine.setPoints(gridPoints);
+										}
+									}
+								}
+							} catch (Exception e) { // The API request returned
+													// an error
+								e.printStackTrace();
+							}
+
+						}
+					});
+		}
 	}
 
+	public void gridColor(Double ortalamaHiz, LatLng[] latLngs) {
+		if (ortalamaHiz < 10) {
+			gridLine = googleMap.addPolyline(new PolylineOptions().width(5)
+					.color(Color.RED).geodesic(true).add(latLngs));
+		} else if (10 < ortalamaHiz & ortalamaHiz < 20) {
+			gridLine = googleMap.addPolyline(new PolylineOptions().width(5)
+					.color(Color.YELLOW).geodesic(true));
+			List<LatLng> gridPoints = gridLine.getPoints();
+			gridPoints.add(latLngs[0]);
+			gridPoints.add(latLngs[1]);
+			gridPoints.add(latLngs[2]);
+			gridLine.setPoints(gridPoints);
+		} else {
+			gridLine = googleMap.addPolyline(new PolylineOptions().width(5)
+					.color(Color.GREEN).geodesic(true));
+			List<LatLng> gridPoints = gridLine.getPoints();
+			gridPoints.add(latLngs[0]);
+			gridPoints.add(latLngs[1]);
+			gridPoints.add(latLngs[2]);
+			gridLine.setPoints(gridPoints);
+		}
+
+	}
 
 }
