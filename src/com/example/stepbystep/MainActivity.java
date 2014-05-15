@@ -16,6 +16,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
@@ -134,7 +135,12 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 
 				// sent to apigee
 				sentApigee(currentLocation);
-				getNearestLocation(currentLocation);
+				try {
+					getNearestLocation(currentLocation);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 				// baþla butonuna týklanýnca bitir butonun görünür olmasýný
 				// saðlýyoruz.
@@ -327,14 +333,15 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 		}
 	}
 
-	public void getNearestLocation(Location location) {
+	public void getNearestLocation(Location location) throws IOException {
 		// Create client entity
 		String ORGNAME = "ecesecil";
 		String APPNAME = "sandbox";
 		ApigeeClient apigeeClient = new ApigeeClient(ORGNAME, APPNAME,
 				this.getBaseContext());
 		DataClient dataClient = apigeeClient.getDataClient();
-
+		
+		
 		// gridlerin baþ/orta/son noktalarý dizide tutulacak.
 		route = new ArrayList<LatLng[]>();
 		route.add(new LatLng[] {
@@ -460,7 +467,7 @@ public class MainActivity extends FragmentActivity implements LocationListener {
 	}
 
 	public void gridColor(Double ortalamaHiz, LatLng[] latLngs) {
-		if (ortalamaHiz < 10) {
+		if (ortalamaHiz < 10) { // colorsegment metodu ile 10/20 deðerlerine çözüm 
 			gridLine = googleMap.addPolyline(new PolylineOptions().width(5)
 					.color(Color.RED).geodesic(true).add(latLngs));
 		} else if (10 < ortalamaHiz & ortalamaHiz < 20) {
